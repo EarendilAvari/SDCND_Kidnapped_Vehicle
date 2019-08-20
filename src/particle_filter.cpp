@@ -23,14 +23,42 @@ using std::vector;
 
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
   /**
-   * TODO: Set the number of particles. Initialize all particles to 
+   * TODO (DONE): Set the number of particles. Initialize all particles to 
    *   first position (based on estimates of x, y, theta and their uncertainties
    *   from GPS) and all weights to 1. 
-   * TODO: Add random Gaussian noise to each particle.
+   * TODO (DONE): Add random Gaussian noise to each particle.
    * NOTE: Consult particle_filter.h for more information about this method 
    *   (and others in this file).
    */
-  num_particles = 0;  // TODO: Set the number of particles
+  num_particles = 100;  // Set the number of particles
+  std::default_random_engine random_gen;  // Random number generator used for normal distribuition
+
+  // These three are objects which generate random numbers based on a normal distribution with
+  // mean and standard deviation given by the first parameter and second parameter respectively given here. 
+  std::normal_distribution<double> x_rand(x, std[0]);
+  std::normal_distribution<double> y_rand(y, std[1]);
+  std::normal_distribution<double> th_rand(theta, std[2]);
+
+  for (int i = 0; i < num_particles; i++) {
+    // Declares a particle which will be pushed to the particle's list
+    Particle curr_part;
+
+    // Initializes the particle position and orientation with the normal distribution generators
+    curr_part.id = i;
+    curr_part.x = x_rand(random_gen);
+    curr_part.y = y_rand(random_gen);
+    curr_part.theta = th_rand(random_gen);
+    // All the weights are initialized with 1
+    curr_part.weight = 1;
+
+    // Only for debugging, comment after debugged.
+    std::cout << "DEBUG PRINT INIT PHASE. Particle " << i << " initialized with x: " << 
+      curr_part.x << ", y: " << curr_part.y << ", th: " << curr_part.theta << std::endl;
+
+    // Sets this variable which indicates that the filter is initialized.
+    is_initialized = true;
+
+  }
 
 }
 

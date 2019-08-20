@@ -12,7 +12,7 @@ file(GLOB HEADERS_HPP src/*.hpp)
 
 set(sources src/particle_filter.cpp src/main.cpp ${HEADERS} ${HEADERS_HPP})
 
-
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -Wall")
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
 

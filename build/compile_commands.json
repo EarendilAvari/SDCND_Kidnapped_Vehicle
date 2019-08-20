@@ -1,0 +1,12 @@
+[
+{
+  "directory": "/mnt/data/Udacity/Self_driving_car_engineer/Project6/My_Project/build",
+  "command": "/usr/bin/g++-7    -Wall -g -g -Wall   -std=c++11 -o CMakeFiles/particle_filter.dir/src/particle_filter.cpp.o -c /mnt/data/Udacity/Self_driving_car_engineer/Project6/My_Project/src/particle_filter.cpp",
+  "file": "/mnt/data/Udacity/Self_driving_car_engineer/Project6/My_Project/src/particle_filter.cpp"
+},
+{
+  "directory": "/mnt/data/Udacity/Self_driving_car_engineer/Project6/My_Project/build",
+  "command": "/usr/bin/g++-7    -Wall -g -g -Wall   -std=c++11 -o CMakeFiles/particle_filter.dir/src/main.cpp.o -c /mnt/data/Udacity/Self_driving_car_engineer/Project6/My_Project/src/main.cpp",
+  "file": "/mnt/data/Udacity/Self_driving_car_engineer/Project6/My_Project/src/main.cpp"
+}
+]

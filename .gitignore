@@ -1,0 +1,6 @@
+# Simulator data
+
+Simulator/
+
+# Ignore visual studio code data
+.vscode/
