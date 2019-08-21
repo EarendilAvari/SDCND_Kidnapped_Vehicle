@@ -51,26 +51,65 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
     // All the weights are initialized with 1
     curr_part.weight = 1;
 
-    // Only for debugging, comment after debugged.
-    std::cout << "DEBUG PRINT INIT PHASE. Particle " << i << " initialized with x: " << 
-      curr_part.x << ", y: " << curr_part.y << ", th: " << curr_part.theta << std::endl;
+    // Pushs particle to vector of particles
+    particles.push_back(curr_part);
 
-    // Sets this variable which indicates that the filter is initialized.
-    is_initialized = true;
+    // Only for debugging, comment after debugged.
+    // std::cout << "DEBUG PRINT INIT PHASE. Particle " << i << " initialized with x: " << 
+    //  curr_part.x << ", y: " << curr_part.y << ", th: " << curr_part.theta << std::endl;
 
   }
 
+    // Sets this variable which indicates that the filter is initialized.
+    is_initialized = true;
 }
 
 void ParticleFilter::prediction(double delta_t, double std_pos[], 
                                 double velocity, double yaw_rate) {
   /**
-   * TODO: Add measurements to each particle and add random Gaussian noise.
+   * TODO (DONE): Add measurements to each particle and add random Gaussian noise.
    * NOTE: When adding noise you may find std::normal_distribution 
    *   and std::default_random_engine useful.
    *  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
    *  http://www.cplusplus.com/reference/random/default_random_engine/
    */
+  std::default_random_engine random_gen; // Random number generator used for normal distribuition
+
+  // This time the normal distribution objects have mean 0.0 and they are added to the final result 
+  std::normal_distribution<double> x_noise(0.0, std_pos[0]);
+  std::normal_distribution<double> y_noise(0.0, std_pos[1]);
+  std::normal_distribution<double> th_noise(0.0, std_pos[2]);
+
+  // The motion model is different for yaw_rate != 0 and yaw_rate == 0
+  // Since the yaw rate is a parameter given to the function, doing the if before the for makes the program
+  // a bit faster
+  if (yaw_rate == 0) {
+    for (int i = 0; i < num_particles; i++) {
+      // Only for debugging, comment after debugged.
+      // std::cout << "DEBUG PRINT PREDICTION PHASE. Velocity: " << velocity << " yaw rate: " << yaw_rate << std::endl;
+      // std::cout << "Particle " << i << "x0: " << particles[i].x << " y0: " << particles[i].y << " th0: " << particles[i].theta << std::endl;
+
+      particles[i].x += velocity*delta_t*cos(particles[i].theta) + x_noise(random_gen);
+      particles[i].y += velocity*delta_t*sin(particles[i].theta) + y_noise(random_gen);
+
+      // Only for debugging, comment after debugged.
+      // std::cout << "Particle " << i << "x0: " << particles[i].x << " y0: " << particles[i].y << " th0: " << particles[i].theta << std::endl;
+    }
+  }
+  else {
+    for (int i = 0; i < num_particles; i++) {
+      // Only for debugging, comment after debugged.
+      // std::cout << "DEBUG PRINT PREDICTION PHASE. Velocity: " << velocity << " yaw rate: " << yaw_rate << std::endl;
+      // std::cout << "Particle " << i << "x0: " << particles[i].x << " y0: " << particles[i].y << " th0: " << particles[i].theta << std::endl;
+
+      particles[i].x += (velocity/yaw_rate)*(sin(particles[i].theta + yaw_rate*delta_t) - sin(particles[i].theta)) + x_noise(random_gen);
+      particles[i].y += (velocity/yaw_rate)*(cos(particles[i].theta) - cos(particles[i].theta + yaw_rate*delta_t)) + y_noise(random_gen);
+      particles[i].theta += yaw_rate*delta_t;
+
+      // Only for debugging, comment after debugged.
+      // std::cout << "Particle " << i << "x0: " << particles[i].x << " y0: " << particles[i].y << " th0: " << particles[i].theta << std::endl;
+    }
+  }  
 
 }
 
