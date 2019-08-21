@@ -65,7 +65,17 @@ class ParticleFilter {
    */
   void dataAssociation(std::vector<LandmarkObs> predicted, 
                        std::vector<LandmarkObs>& observations);
+
+  /**
+   * convertObservations Convert the observation vector from the coordinate system  
+   * of a particle to the map coordinate system
+   * @param observations Vector of landmark observations in car coordinates
+   * @param part_number No. of the particle used to do the transformation.
+   * @output Vector of landmark observations in map coordinates
+   */
   
+std::vector<LandmarkObs>convertObservations(const std::vector<LandmarkObs> &observations, unsigned int part_number);
+
   /**
    * updateWeights Updates the weights for each particle based on the likelihood
    *   of the observed measurements. 

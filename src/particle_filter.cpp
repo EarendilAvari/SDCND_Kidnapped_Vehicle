@@ -126,8 +126,37 @@ void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted,
 
 }
 
+  /**
+   * convertObservations Convert the observation vector from the coordinate system  
+   * of a particle to the map coordinate system
+   * @param observations Vector of landmark observations in car coordinates
+   * @param part_number No. of the particle used to do the transformation.
+   * @output Vector of landmark observations in map coordinates
+   */
+std::vector<LandmarkObs> ParticleFilter::convertObservations
+                        (const std::vector<LandmarkObs> &observations, unsigned int part_number) {
+  // Creates an empty vector of observations with map coordinate system and an observation
+  // object to fill the vector up.
+  std::vector<LandmarkObs> observations_map;
+  LandmarkObs current_observation;
+
+  for (unsigned int i = 0; i < observations.size(); i++) {
+    current_observation.id = observations[i].id;
+    current_observation.x = particles[part_number].x + 
+                            cos(particles[part_number].theta * observations[i].x) -
+                            sin(particles[part_number].theta * observations[i].y);
+    current_observation.y = particles[part_number].y +
+                            sin(particles[part_number].theta * observations[i].x) +
+                            cos(particles[part_number].theta * observations[i].y);
+
+    // Pushes "current_observation" to observations vector in map coordinates
+    observations_map.push_back(current_observation);
+  }
+  return observations_map;
+}
+
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
-                                   const vector<LandmarkObs> &observations, 
+                                   const std::vector<LandmarkObs> &observations, 
                                    const Map &map_landmarks) {
   /**
    * TODO: Update the weights of each particle using a mult-variate Gaussian 
@@ -142,6 +171,22 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
    *   and the following is a good resource for the actual equation to implement
    *   (look at equation 3.33) http://planning.cs.uiuc.edu/node99.html
    */
+
+  // Takes from "observations" only the observations with modulo smaller than "sensor_range" (Tested)
+  std::vector<LandmarkObs> observations_on_range;
+  for (unsigned int i = 0; i < observations.size(); i++) {
+    if (module(observations[i].x, observations[i].y) <= sensor_range) {
+      observations_on_range.push_back(observations[i]);
+    }
+  }
+
+  // Loops through all particles
+  std::vector<LandmarkObs> observations_conv_map;
+  for (int i = 0; i < num_particles; i++) {
+    // Converts the observations to map coordinates
+    observations_conv_map = convertObservations(observations_on_range, i);
+  }
+
 
 }
 

@@ -3,7 +3,7 @@
  * Some helper functions for the 2D particle filter.
  *
  * Created on: Dec 13, 2016
- * Author: Tiffany Huang
+ * Author: Tiffany Huang. Updated by Jorge Rilling.
  */
 
 #ifndef HELPER_FUNCTIONS_H_
@@ -56,6 +56,17 @@ struct LandmarkObs {
  */
 inline double dist(double x1, double y1, double x2, double y2) {
   return sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+}
+
+/**
+ * Computes the module of a 2D point
+ * @param (x, y) x and y coordinates of point
+ * @output Module of point 
+ * 
+ */
+
+inline double module(double x, double y) {
+  return sqrt(x*x + y*y);
 }
 
 /**
