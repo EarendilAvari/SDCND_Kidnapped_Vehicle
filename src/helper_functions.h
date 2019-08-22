@@ -2,8 +2,8 @@
  * helper_functions.h
  * Some helper functions for the 2D particle filter.
  *
- * Created on: Dec 13, 2016
- * Author: Tiffany Huang. Updated by Jorge Rilling.
+ * Created on: Dec 13, 2016. Modified at Aug 22, 2019.
+ * Author: Tiffany Huang. Modified by Jorge Rilling.
  */
 
 #ifndef HELPER_FUNCTIONS_H_
@@ -55,7 +55,7 @@ struct LandmarkObs {
  * @output Euclidean distance between two 2D points
  */
 inline double dist(double x1, double y1, double x2, double y2) {
-  return sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+  return sqrt(((x2 - x1) * (x2 - x1)) + ((y2 - y1) * (y2 - y1)));
 }
 
 /**
@@ -64,10 +64,23 @@ inline double dist(double x1, double y1, double x2, double y2) {
  * @output Module of point 
  * 
  */
-
 inline double module(double x, double y) {
   return sqrt(x*x + y*y);
 }
+
+/**
+ * Computes the 2D Gaussian probability 
+ * @param (x, y) x and y coordinates of test point
+ * @param (ux, uy) ux and uy coordinates of mean
+ * @param (sig_x, sig_y) variance in X and Y axes
+ * @output 2D Gaussian probability
+ */
+inline double _2dGauss(double x, double y, double ux, double uy, double sig_x, double sig_y) {
+  double gain = (1/(2*M_PI*sig_x*sig_y));
+  double exp_function = exp(-(x - ux)*(x - ux)/(2*sig_x*sig_x) - (y - uy)*(y - uy)/(2*sig_y*sig_y));
+  return gain*exp_function;
+}
+
 
 /**
  * Computes the error between ground truth and particle filter data.

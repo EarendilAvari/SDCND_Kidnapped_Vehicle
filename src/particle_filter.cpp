@@ -1,8 +1,8 @@
 /**
  * particle_filter.cpp
  *
- * Created on: Dec 12, 2016
- * Author: Tiffany Huang
+ * Created on: Dec 12, 2016. Modified at Aug 22, 2019.
+ * Author: Tiffany Huang. Modified by Jorge Rilling.
  */
 
 #include "particle_filter.h"
@@ -113,16 +113,44 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
 
 }
 
-void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted, 
-                                     vector<LandmarkObs>& observations) {
+void ParticleFilter::dataAssociation(const Map &map_landmarks, 
+                                     const std::vector<LandmarkObs>& observations, unsigned int part_number) {
   /**
-   * TODO: Find the predicted measurement that is closest to each 
+   * TODO: Find the map landmark that is closest to each 
    *   observed measurement and assign the observed measurement to this 
    *   particular landmark.
    * NOTE: this method will NOT be called by the grading code. But you will 
    *   probably find it useful to implement this method and use it as a helper 
    *   during the updateWeights phase.
    */
+  std::vector<int> landmark_ids;
+  std::vector<double> landmark_x;
+  std::vector<double> landmark_y;
+
+  int curr_id;
+  double curr_landmark_x;
+  double curr_landmark_y;
+
+  for (unsigned int i = 0; i < observations.size(); i++) {
+    double min_distance = 1000.0;
+    for (unsigned int j = 0; j < map_landmarks.landmark_list.size(); j++) {
+      double curr_distance = dist(observations[i].x, observations[i].y, 
+                              map_landmarks.landmark_list[j].x_f, map_landmarks.landmark_list[j].y_f);
+      if (curr_distance < min_distance) {
+        min_distance = curr_distance;
+        curr_id = map_landmarks.landmark_list[j].id_i;
+        curr_landmark_x = map_landmarks.landmark_list[j].x_f;
+        curr_landmark_y = map_landmarks.landmark_list[j].y_f;
+      }
+    }
+    landmark_ids.push_back(curr_id);
+    landmark_x.push_back(curr_landmark_x);
+    landmark_y.push_back(curr_landmark_y);
+  }
+
+  particles[part_number].associations = landmark_ids;
+  particles[part_number].sense_x = landmark_x;
+  particles[part_number].sense_y = landmark_y;
 
 }
 
@@ -143,11 +171,11 @@ std::vector<LandmarkObs> ParticleFilter::convertObservations
   for (unsigned int i = 0; i < observations.size(); i++) {
     current_observation.id = observations[i].id;
     current_observation.x = particles[part_number].x + 
-                            cos(particles[part_number].theta * observations[i].x) -
-                            sin(particles[part_number].theta * observations[i].y);
+                            cos(particles[part_number].theta) * observations[i].x -
+                            sin(particles[part_number].theta) * observations[i].y;
     current_observation.y = particles[part_number].y +
-                            sin(particles[part_number].theta * observations[i].x) +
-                            cos(particles[part_number].theta * observations[i].y);
+                            sin(particles[part_number].theta) * observations[i].x +
+                            cos(particles[part_number].theta) * observations[i].y;
 
     // Pushes "current_observation" to observations vector in map coordinates
     observations_map.push_back(current_observation);
@@ -182,36 +210,68 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
   // Loops through all particles
   std::vector<LandmarkObs> observations_conv_map;
+  // std::cout << "DEBUG PRINT UPDATE PHASE " << std::endl;
   for (int i = 0; i < num_particles; i++) {
     // Converts the observations to map coordinates
     observations_conv_map = convertObservations(observations_on_range, i);
+    // Associates the observations to map landmarks and save the asociations on the particles object vector
+    dataAssociation(map_landmarks, observations_conv_map, i);
+    // Calculates the weights of the particles using the 2D Gaussian probability function 
+    // with the observation in map coordinates as test point and the position of the associated 
+    // landmark as mean.
+    particles[i].weight = 1.0;
+    for (unsigned int j = 0; j < particles[i].associations.size(); j++) {
+      // The 
+      particles[i].weight *= _2dGauss(observations_conv_map[j].x, observations_conv_map[j].y, 
+                              particles[i].sense_x[j], particles[i].sense_y[j], std_landmark[0], std_landmark[1]);
+    }
+    // std::cout << "Particle " << i << " new weight: " << particles[i].weight << std::endl;
   }
-
-
 }
 
 void ParticleFilter::resample() {
   /**
    * TODO: Resample particles with replacement with probability proportional 
    *   to their weight. 
-   * NOTE: You may find std::discrete_distribution helpful here.
-   *   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
+   * The method uses the resampling wheel explained by Sebastian Trunn on the 
+   * video: https://www.youtube.com/watch?v=wNQVo6uOgYA
    */
+  std::vector<Particle> new_particles;
 
-}
+  // Determines the maximal weight
+  double max_weight = 0.0;
+  for (unsigned int i = 0; i < particles.size(); i++) {
+    if (particles[i].weight > max_weight) {
+      max_weight = particles[i].weight;
+    }
+  }
 
-void ParticleFilter::SetAssociations(Particle& particle, 
-                                     const vector<int>& associations, 
-                                     const vector<double>& sense_x, 
-                                     const vector<double>& sense_y) {
-  // particle: the particle to which assign each listed association, 
-  //   and association's (x,y) world coordinates mapping
-  // associations: The landmark id that goes along with each listed association
-  // sense_x: the associations x mapping already converted to world coordinates
-  // sense_y: the associations y mapping already converted to world coordinates
-  particle.associations= associations;
-  particle.sense_x = sense_x;
-  particle.sense_y = sense_y;
+  // Random particle index used by the weights wheel
+  unsigned int index = rand() % num_particles;
+
+  // Beta is a random number between 0 and 2*max_weight
+  double beta = 0.0;
+  std::default_random_engine random_gen;
+  std::uniform_real_distribution <> beta_gen(0.0, 2*max_weight);
+
+  // All the particles are iterated. Here it is important to note that
+  // the index used to access the particles is not the variable i,
+  // instead it is the random variable "index" defined before.
+  for (unsigned int i = 0; i < num_particles; i++) {
+    // For every particle being processed beta is added up with a 
+    // random number between 0.0 and twice the weight of the most
+    // important particle
+    beta += beta_gen(random_gen); 
+    while (beta > particles[index].weight) {
+      beta -= particles[index].weight;
+      index = (index + 1)%num_particles;
+    }
+    // The particle added to the vector of new particles is the first
+    // one found with weight bigger than beta. Beta is made smaller with  
+    // the weight of every not accepted particle.
+    new_particles.push_back(particles[index]);
+  }
+  particles = new_particles;
 }
 
 string ParticleFilter::getAssociations(Particle best) {

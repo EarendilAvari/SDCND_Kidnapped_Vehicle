@@ -2,8 +2,8 @@
  * particle_filter.h
  * 2D particle filter class.
  *
- * Created on: Dec 12, 2016
- * Author: Tiffany Huang
+ * Created on: Dec 12, 2016. Modified at Aug 22, 2019.
+ * Author: Tiffany Huang. Modified by Jorge Rilling.
  */
 
 #ifndef PARTICLE_FILTER_H_
@@ -60,11 +60,12 @@ class ParticleFilter {
   /**
    * dataAssociation Finds which observations correspond to which landmarks 
    *   (likely by using a nearest-neighbors data association).
-   * @param predicted Vector of predicted landmark observations
+   * @param map Map class containing map landmarks
    * @param observations Vector of landmark observations
+   * @param part_number No. of the particle, the asociation is done with.
    */
-  void dataAssociation(std::vector<LandmarkObs> predicted, 
-                       std::vector<LandmarkObs>& observations);
+  void dataAssociation(const Map &map_landmarks, 
+                       const std::vector<LandmarkObs>& observations, unsigned int part_number);
 
   /**
    * convertObservations Convert the observation vector from the coordinate system  
@@ -96,16 +97,6 @@ std::vector<LandmarkObs>convertObservations(const std::vector<LandmarkObs> &obse
   void resample();
 
   /**
-   * Set a particles list of associations, along with the associations'
-   *   calculated world x,y coordinates
-   * This can be a very useful debugging tool to make sure transformations 
-   *   are correct and assocations correctly connected
-   */
-  void SetAssociations(Particle& particle, const std::vector<int>& associations,
-                       const std::vector<double>& sense_x, 
-                       const std::vector<double>& sense_y);
-
-  /**
    * initialized Returns whether particle filter is initialized yet or not.
    */
   const bool initialized() const {
@@ -127,9 +118,6 @@ std::vector<LandmarkObs>convertObservations(const std::vector<LandmarkObs> &obse
   
   // Flag, if filter is initialized
   bool is_initialized;
-  
-  // Vector of weights of all particles
-  std::vector<double> weights; 
 };
 
 #endif  // PARTICLE_FILTER_H_
