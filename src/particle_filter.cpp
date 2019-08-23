@@ -116,23 +116,30 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
 void ParticleFilter::dataAssociation(const Map &map_landmarks, 
                                      const std::vector<LandmarkObs>& observations, unsigned int part_number) {
   /**
-   * TODO: Find the map landmark that is closest to each 
+   * TODO (DONE): Find the map landmark that is closest to each 
    *   observed measurement and assign the observed measurement to this 
    *   particular landmark.
-   * NOTE: this method will NOT be called by the grading code. But you will 
-   *   probably find it useful to implement this method and use it as a helper 
-   *   during the updateWeights phase.
    */
+
+  // These vectors are filled up with the asociations of the observations from a particle to 
+  // map landmarks
   std::vector<int> landmark_ids;
   std::vector<double> landmark_x;
   std::vector<double> landmark_y;
 
+  // These three variables are used to process the asociations corresponding to one observation
+  // They are used to fill up the vectors
   int curr_id;
   double curr_landmark_x;
   double curr_landmark_y;
 
+  // It iterates through all observations (in map coordinates)
   for (unsigned int i = 0; i < observations.size(); i++) {
+    // This variable corresponds to the minimum distance between the current observation and the 
+    // landmarks. 
     double min_distance = 1000.0;
+    // It iterates through all map landmarks to find the one which has the minimum
+    // distance with the current observation
     for (unsigned int j = 0; j < map_landmarks.landmark_list.size(); j++) {
       double curr_distance = dist(observations[i].x, observations[i].y, 
                               map_landmarks.landmark_list[j].x_f, map_landmarks.landmark_list[j].y_f);
@@ -143,11 +150,13 @@ void ParticleFilter::dataAssociation(const Map &map_landmarks,
         curr_landmark_y = map_landmarks.landmark_list[j].y_f;
       }
     }
+    // The vectors are filled up
     landmark_ids.push_back(curr_id);
     landmark_x.push_back(curr_landmark_x);
     landmark_y.push_back(curr_landmark_y);
   }
 
+  // The particle's vectors are updated
   particles[part_number].associations = landmark_ids;
   particles[part_number].sense_x = landmark_x;
   particles[part_number].sense_y = landmark_y;
