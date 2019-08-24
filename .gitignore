@@ -2,5 +2,8 @@
 
 Simulator/
 
+# Videos
+Videos/
+
 # Ignore visual studio code data
 .vscode/
